@@ -1,5 +1,5 @@
 import { AiOutlineCheckCircle } from "react-icons/ai";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import data from "../data/data.json";
 import { GiCancel } from "react-icons/gi";
 
@@ -96,14 +96,41 @@ const productMap = {
 };
 
 export default function Confirm({ cart, total, setCart, setShowConfirm }) {
+  const newOrderButtonRef = useRef(null);
+  
+  useEffect(() => {
+    // Auto-focus on the New Order button when modal opens
+    if (newOrderButtonRef.current) {
+      newOrderButtonRef.current.focus();
+    }
+    
+    // Setup focus trap for modal
+    const handleTabKey = (e) => {
+      if (e.key === 'Tab') {
+        // Since we only have one focusable element, prevent focus from leaving
+        e.preventDefault();
+        newOrderButtonRef.current.focus();
+      }
+    };
+    
+    window.addEventListener('keydown', handleTabKey);
+    return () => {
+      window.removeEventListener('keydown', handleTabKey);
+    };
+  }, []);
+
   const newOrder = () => {
     setCart([]);
     setShowConfirm(false);
   };
+  
   return (
-    <div className="lg:w-[30%] md:w-[50%] w-[90%] mx-auto px-5 py-8 bg-white rounded-2xl shadow-2xl">
+    <div 
+      className="lg:w-[30%] md:w-[50%] w-[90%] mx-auto px-5 py-8 bg-white rounded-2xl shadow-2xl"
+      id="order-confirmation-dialog"
+    >
       <AiOutlineCheckCircle className="text-[#399475] text-3xl" />
-      <h1 className="text-[#3B3431] font-semibold text-2xl">Order Confirmed</h1>
+      <h1 id="order-confirmation-title" className="text-[#3B3431] font-semibold text-2xl">Order Confirmed</h1>
       <p>We hope you enjoy your food</p>
       <div className="mt-4">
         {cart.map((item) => (
@@ -145,8 +172,19 @@ export default function Confirm({ cart, total, setCart, setShowConfirm }) {
           </div>
           <div>
             <button
+              ref={newOrderButtonRef}
               onClick={newOrder}
-              className="w-full bg-[#C93B0C] text-white font-medium py-2 rounded-full mt-2 hover:bg-[#943618] transition-colors cursor-pointer"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  newOrder();
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setShowConfirm(false);
+                }
+              }}
+              className="w-full bg-[#C93B0C] text-white font-medium py-2 rounded-full mt-2 hover:bg-[#943618] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#943618]"
+              aria-label="Start New Order"
             >
               Start New Order
             </button>
